@@ -4,16 +4,30 @@ A CLI tool that reports on merge requests created by a set of authors across one
 
 > **Note:** Only GitLab is supported currently.
 
-## Setup
+## Install
 
-Copy the example config and fill in your details:
+Build and install the binary to `/usr/local/bin`:
 
 ```bash
-cp config.example.yaml config.yaml
+./install.sh
 ```
+
+> You may need `sudo ./install.sh` if `/usr/local/bin` requires elevated permissions.
+
+## Config
+
+The config lives at `~/.git-synced/config.yaml`. Create the directory and copy the example:
+
+```bash
+mkdir -p ~/.git-synced
+cp config.example.yaml ~/.git-synced/config.yaml
+```
+
+Then fill in your details:
 
 ```yaml
 format: "text"         # text | json | yaml
+output_dir: "./reports"  # omit to print to stdout
 providers:
   - name: gitlab
     token: "glpat-xxxxxxxxxxxx"
@@ -31,14 +45,13 @@ providers:
 ## Usage
 
 ```bash
-go run ./cmd --config config.yaml
+git-synced
 ```
 
-Or build first:
+Override the config path if needed:
 
 ```bash
-go build -o git-synced ./cmd
-./git-synced --config config.yaml
+git-synced --config /path/to/config.yaml
 ```
 
 ## Cron
@@ -46,5 +59,5 @@ go build -o git-synced ./cmd
 To run automatically each morning:
 
 ```
-0 9 * * * cd /path/to/git-synced && ./git-synced >> /tmp/mr-report.log 2>&1
+0 9 * * * git-synced >> /tmp/mr-report.log 2>&1
 ```

@@ -37,8 +37,6 @@ type mrOutput struct {
 	CreatedAt string `json:"created_at" yaml:"created_at"`
 }
 
-
-
 // buildReport groups Entry records by author (in config order) and returns a
 // structured reportOutput suitable for json/yaml serialization.
 func buildReport(entries []providers.Entry, authors []string, lookbackHours int) reportOutput {
@@ -176,10 +174,9 @@ func printReport(w io.Writer, entries []providers.Entry, authors []string) {
 	fmt.Fprintf(w, "---\n\n**Total: %s**\n", summary)
 }
 
-
 func run(cfg config.Config) error {
 	var entries []providers.Entry
-	var allAuthors []string
+	var authors []string
 	seenAuthors := make(map[string]bool)
 	maxLookback := 0
 
@@ -219,7 +216,7 @@ func run(cfg config.Config) error {
 		for _, a := range p.Authors {
 			if !seenAuthors[a] {
 				seenAuthors[a] = true
-				allAuthors = append(allAuthors, a)
+				authors = append(authors, a)
 			}
 		}
 	}
@@ -236,17 +233,25 @@ func run(cfg config.Config) error {
 	case "json":
 		enc := json.NewEncoder(out)
 		enc.SetIndent("", "  ")
-		return enc.Encode(buildReport(entries, allAuthors, maxLookback))
+		return enc.Encode(buildReport(entries, authors, maxLookback))
 	case "text":
-		printReport(out, entries, allAuthors)
+		printReport(out, entries, authors)
 	default: // "yaml"
-		return yaml.NewEncoder(out).Encode(buildReport(entries, allAuthors, maxLookback))
+		return yaml.NewEncoder(out).Encode(buildReport(entries, authors, maxLookback))
 	}
 	return nil
 }
 
+func defaultConfigPath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "config.yaml"
+	}
+	return home + "/.git-synced/config.yaml"
+}
+
 func main() {
-	configPath := flag.String("config", "config.yaml", "path to config file")
+	configPath := flag.String("config", defaultConfigPath(), "path to config file")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `git-synced — GitLab MR daily watcher
 
