@@ -164,7 +164,27 @@ func timeAgo(t time.Time) string {
 	}
 }
 
-func printReport(entries []providers.Entry, authors []string) {
+func outputWriter(cfg config.Config) (io.Writer, error) {
+	if cfg.OutputDir == "" {
+		return os.Stdout, nil
+	}
+	ext := map[string]string{"json": "json", "text": "md"}
+	e, ok := ext[cfg.Format]
+	if !ok {
+		e = "yaml"
+	}
+	if err := os.MkdirAll(cfg.OutputDir, 0o755); err != nil {
+		return nil, fmt.Errorf("creating output directory: %w", err)
+	}
+	name := fmt.Sprintf("mr-report-%s.%s", time.Now().Format("2006-01-02"), e)
+	f, err := os.Create(cfg.OutputDir + "/" + name)
+	if err != nil {
+		return nil, fmt.Errorf("creating output file: %w", err)
+	}
+	return f, nil
+}
+
+func printReport(w io.Writer, entries []providers.Entry, authors []string) {
 	byAuthor := make(map[string][]providers.Entry)
 	for _, e := range entries {
 		byAuthor[e.Author()] = append(byAuthor[e.Author()], e)
@@ -178,28 +198,28 @@ func printReport(entries []providers.Entry, authors []string) {
 		})
 	}
 
-	fmt.Printf("# MR Report — %s\n\n", time.Now().Format("2006-01-02"))
+	fmt.Fprintf(w, "# MR Report — %s\n\n", time.Now().Format("2006-01-02"))
 
 	for _, author := range authors {
 		mrs := byAuthor[author]
 		count := len(mrs)
 		if count == 0 {
-			fmt.Printf("## %s\n\n_No new MRs._\n\n", author)
+			fmt.Fprintf(w, "## %s\n\n_No new MRs._\n\n", author)
 			continue
 		}
 		mrWord := "MRs"
 		if count == 1 {
 			mrWord = "MR"
 		}
-		fmt.Printf("## %s (%d new %s)\n\n", author, count, mrWord)
-		fmt.Println("| Repo | Title | Created | URL |")
-		fmt.Println("|------|-------|---------|-----|")
+		fmt.Fprintf(w, "## %s (%d new %s)\n\n", author, count, mrWord)
+		fmt.Fprintln(w, "| Repo | Title | Created | URL |")
+		fmt.Fprintln(w, "|------|-------|---------|-----|")
 		for _, e := range mrs {
 			t, _ := time.Parse(time.RFC3339, e.CreatedAt())
-			fmt.Printf("| %s | %s | %s | %s |\n",
+			fmt.Fprintf(w, "| %s | %s | %s | %s |\n",
 				shortRepoName(e.Repo()), e.Title(), timeAgo(t), e.URL())
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 
 	repoSet := make(map[string]struct{})
@@ -219,7 +239,7 @@ func printReport(entries []providers.Entry, authors []string) {
 		}
 		summary += fmt.Sprintf(" across %d %s", len(repoSet), repoWord)
 	}
-	fmt.Printf("---\n\n**Total: %s**\n", summary)
+	fmt.Fprintf(w, "---\n\n**Total: %s**\n", summary)
 }
 
 
@@ -264,15 +284,23 @@ func run(cfg config.Config) error {
 		}
 	}
 
+	out, err := outputWriter(cfg)
+	if err != nil {
+		return err
+	}
+	if f, ok := out.(*os.File); ok && f != os.Stdout {
+		defer f.Close()
+	}
+
 	switch cfg.Format {
 	case "json":
-		enc := json.NewEncoder(os.Stdout)
+		enc := json.NewEncoder(out)
 		enc.SetIndent("", "  ")
 		return enc.Encode(buildReport(entries, allAuthors, maxLookback))
 	case "text":
-		printReport(entries, allAuthors)
+		printReport(out, entries, allAuthors)
 	default: // "yaml"
-		return yaml.NewEncoder(os.Stdout).Encode(buildReport(entries, allAuthors, maxLookback))
+		return yaml.NewEncoder(out).Encode(buildReport(entries, allAuthors, maxLookback))
 	}
 	return nil
 }

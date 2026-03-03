@@ -19,6 +19,7 @@ type ProviderConfig struct {
 
 type Config struct {
 	Format    string           `yaml:"format"`
+	OutputDir string           `yaml:"output_dir"`
 	Providers []ProviderConfig `yaml:"providers"`
 }
 

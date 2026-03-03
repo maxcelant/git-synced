@@ -11,5 +11,6 @@ type Entry interface {
 }
 
 type Provider interface {
+	Expand(repos []string) ([]string, error)
 	Call(string, string, time.Time) ([]Entry, error)
 }
