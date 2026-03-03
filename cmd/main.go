@@ -186,7 +186,13 @@ func run(cfg config.Config) error {
 	for i := range cfg.Providers {
 		p := &cfg.Providers[i]
 
-		provider := providers.NewGitLabProvider(*p)
+		var provider providers.Provider
+		switch p.Name {
+		case "gitlab":
+			provider = providers.NewGitLabProvider(*p)
+		default:
+			return fmt.Errorf("unsupported provider %q", p.Name)
+		}
 
 		repos, err := provider.Expand(p.Repos)
 		if err != nil {
