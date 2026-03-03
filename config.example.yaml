@@ -1,21 +1,13 @@
-gitlab_url: "https://gitlab.com" # or your self-hosted GitLab URL
-token: "glpat-xxxxxxxxxxxx" # GitLab personal access token
-
-# How far back to look for MRs (default: 24 for daily runs)
-lookback_hours: 24
-
-# MR state to query: "opened", "closed", "merged", or "all"
-state: "all"
-
-# Output format: "yaml" (default), "json", or "text" (markdown)
-output_format: "yaml"
-
-authors:
-  - alice
-  - bob
-
-repos:
-  - group/repo-one
-  - group/repo-two
-  # Wildcard: expands to all projects in a group (including subgroups)
-  # - group/subgroup/*
+format: "yaml"
+providers:
+  - name: gitlab
+    token: "gl***"
+    base_url: "https://gitlab.com"
+    lookback_hours: 96
+    state: "all"
+    authors:
+      - bob
+      - alice
+    repos:
+      - foo/bar
+      - foo/baz
