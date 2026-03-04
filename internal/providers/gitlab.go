@@ -129,15 +129,15 @@ func (gp *GitLabProvider) Call(repo, author string, from time.Time) ([]Entry, er
 		return nil, fmt.Errorf("GitLab API returned %d for repo=%s author=%s: %s", resp.StatusCode, repo, author, body)
 	}
 
-	var mrs []gitlabEntry
-	if err := json.NewDecoder(resp.Body).Decode(&mrs); err != nil {
+	var prs []gitlabEntry
+	if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	entries := make([]Entry, len(mrs))
-	for i, mr := range mrs {
-		mr.RepoStr = repo
-		entries[i] = mr
+	entries := make([]Entry, len(prs))
+	for i, pr := range prs {
+		pr.RepoStr = repo
+		entries[i] = pr
 	}
 	return entries, nil
 }
