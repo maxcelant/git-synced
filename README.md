@@ -2,7 +2,7 @@
 
 A CLI tool that reports on merge requests created by a set of authors across one or more GitLab repositories within a configurable lookback window.
 
-> **Note:** Only GitLab is supported currently.
+> **Note:** GitLab and GitHub are supported.
 
 ## Install
 
@@ -40,6 +40,18 @@ providers:
     repos:
       - group/repo
       - group/*        # wildcard expands all projects under a group
+
+  - name: github
+    token: "ghp-xxxxxxxxxxxx"
+    base_url: "https://github.com"   # omit or set to GitHub Enterprise URL
+    lookback_hours: 96
+    state: "all"       # opened | closed | merged | all
+    authors:
+      - alice
+      - bob
+    repos:
+      - org/repo
+      - org/*          # wildcard expands all repos under an org
 ```
 
 ## Usage

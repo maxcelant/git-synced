@@ -14,6 +14,7 @@ import (
 
 var providerRegistry = map[string]providers.ProviderFunc{
 	"gitlab": providers.NewGitLabProvider,
+	"github": providers.NewGitHubProvider,
 }
 
 func run(cfg config.Config) error {
