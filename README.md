@@ -1,4 +1,4 @@
-# git-synced
+# Gsync
 
 A CLI tool that reports on merge requests created by a set of authors across one or more GitLab repositories within a configurable lookback window.
 
@@ -16,11 +16,11 @@ Build and install the binary to `/usr/local/bin`:
 
 ## Config
 
-The config lives at `~/.git-synced/config.yaml`. Create the directory and copy the example:
+The config lives at `~/.gsync/config.yaml`. Create the directory and copy the example:
 
 ```bash
-mkdir -p ~/.git-synced
-cp config.example.yaml ~/.git-synced/config.yaml
+mkdir -p ~/.gsync
+cp config.example.yaml ~/.gsync/config.yaml
 ```
 
 Then fill in your details:
@@ -57,7 +57,7 @@ providers:
 ## Usage
 
 ```bash
-git-synced
+gsync
 ```
 
 Flags override the values set in your config:
@@ -67,16 +67,19 @@ Flags override the values set in your config:
 | `--format` | Output format: `text`, `json`, or `yaml` |
 | `--out` | Directory to write the report file |
 | `--lookback` | Hours to look back for MRs (overrides config) |
-| `--config` | Path to config file (default: `~/.git-synced/config.yaml`) |
+| `--authors` | Comma-separated list of authors to filter by (overrides config) |
+| `--config` | Path to config file (default: `~/.gsync/config.yaml`) |
 
 Examples:
 
 ```bash
-git-synced --format json
-git-synced --out ~/reports
-git-synced --lookback 48
-git-synced --format text --out ~/reports
-git-synced --config /path/to/config.yaml
+gsync --format json
+gsync --out ~/reports
+gsync --lookback 48
+gsync --authors alice,bob
+gsync --authors alice --authors bob
+gsync --format text --out ~/reports
+gsync --config /path/to/config.yaml
 ```
 
 ## Cron
@@ -84,5 +87,5 @@ git-synced --config /path/to/config.yaml
 To run automatically each morning:
 
 ```
-0 9 * * * git-synced >> /tmp/mr-report.log 2>&1
+0 9 * * * gsync >> /tmp/mr-report.log 2>&1
 ```
