@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -11,19 +12,8 @@ import (
 	"github.com/maxcelant/git-synced/internal/report"
 )
 
-// timeAgo formats a duration as a human-readable "Xh ago" / "Xm ago" string.
-func timeAgo(t time.Time) string {
-	d := time.Since(t)
-	switch {
-	case d < time.Minute:
-		return "just now"
-	case d < time.Hour:
-		return fmt.Sprintf("%dm ago", int(d.Minutes()))
-	case d < 24*time.Hour:
-		return fmt.Sprintf("%dh ago", int(d.Hours()))
-	default:
-		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
-	}
+var providerRegistry = map[string]providers.ProviderFunc{
+	"gitlab": providers.NewGitLabProvider,
 }
 
 func run(cfg config.Config) error {
@@ -35,13 +25,11 @@ func run(cfg config.Config) error {
 	for i := range cfg.Providers {
 		p := &cfg.Providers[i]
 
-		var provider providers.Provider
-		switch p.Name {
-		case "gitlab":
-			provider = providers.NewGitLabProvider(*p)
-		default:
+		providerFunc, ok := providerRegistry[p.Name]
+		if !ok {
 			return fmt.Errorf("unsupported provider %q", p.Name)
 		}
+		provider := providerFunc(*p)
 
 		repos, err := provider.Expand(p.Repos)
 		if err != nil {
@@ -61,7 +49,7 @@ func run(cfg config.Config) error {
 					fmt.Fprintf(os.Stderr, "warning: %v\n", err)
 					continue
 				}
-				entries = append(entries, prs...)
+				entries = append(entries, mrs...)
 			}
 		}
 

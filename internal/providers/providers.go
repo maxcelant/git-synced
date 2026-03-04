@@ -1,6 +1,10 @@
 package providers
 
-import "time"
+import (
+	"time"
+
+	"github.com/maxcelant/git-synced/internal/config"
+)
 
 type Entry interface {
 	Author() string
@@ -14,3 +18,5 @@ type Provider interface {
 	Expand(repos []string) ([]string, error)
 	Call(string, string, time.Time) ([]Entry, error)
 }
+
+type ProviderFunc func(config.ProviderConfig) Provider

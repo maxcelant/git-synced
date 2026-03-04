@@ -16,7 +16,7 @@ type GitLabProvider struct {
 	cfg config.ProviderConfig
 }
 
-func NewGitLabProvider(cfg config.ProviderConfig) *GitLabProvider {
+func NewGitLabProvider(cfg config.ProviderConfig) Provider {
 	return &GitLabProvider{cfg: cfg}
 }
 

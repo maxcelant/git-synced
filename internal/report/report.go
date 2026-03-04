@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/maxcelant/git-synced/internal/config"
@@ -64,9 +66,9 @@ func (r Report) Build(cfg config.Config) error {
 	return nil
 }
 
-func (r Report) build() reportOutput {
+func (r Report) groupByAuthor() map[string][]providers.Entry {
 	byAuthor := make(map[string][]providers.Entry)
-	for _, e := range entries {
+	for _, e := range r.entries {
 		byAuthor[e.Author()] = append(byAuthor[e.Author()], e)
 	}
 	for a := range byAuthor {
@@ -76,9 +78,14 @@ func (r Report) build() reportOutput {
 			return ti.After(tj)
 		})
 	}
+	return byAuthor
+}
+
+func (r Report) build() reportOutput {
+	byAuthor := r.groupByAuthor()
 
 	var authorOutputs []authorOutput
-	for _, username := range authors {
+	for _, username := range r.authors {
 		prs := byAuthor[username]
 		ao := authorOutput{Username: username, PRCount: len(prs)}
 		for _, e := range prs {
@@ -94,31 +101,19 @@ func (r Report) build() reportOutput {
 
 	return reportOutput{
 		Date:          time.Now().Format("2006-01-02"),
-		LookbackHours: lookbackHours,
+		LookbackHours: r.maxLookBack,
 		Authors:       authorOutputs,
-		TotalPRs:      len(entries),
+		TotalPRs:      len(r.entries),
 	}
 }
 
-// shortRepoName returns the final path component of a "group/repo" string.
 func shortRepoName(repo string) string {
 	parts := strings.Split(repo, "/")
 	return parts[len(parts)-1]
 }
 
 func (r *Report) print(w io.Writer) {
-	byAuthor := make(map[string][]providers.Entry)
-	for _, e := range r.entries {
-		byAuthor[e.Author()] = append(byAuthor[e.Author()], e)
-	}
-
-	for a := range byAuthor {
-		sort.Slice(byAuthor[a], func(i, j int) bool {
-			ti, _ := time.Parse(time.RFC3339, byAuthor[a][i].CreatedAt())
-			tj, _ := time.Parse(time.RFC3339, byAuthor[a][j].CreatedAt())
-			return ti.After(tj)
-		})
-	}
+	byAuthor := r.groupByAuthor()
 
 	fmt.Fprintf(w, "# PR Report — %s\n\n", time.Now().Format("2006-01-02"))
 
@@ -177,9 +172,23 @@ func outputWriter(cfg config.Config) (io.Writer, error) {
 		return nil, fmt.Errorf("creating output directory: %w", err)
 	}
 	name := fmt.Sprintf("pr-report-%s.%s", time.Now().Format("2006-01-02"), e)
-	f, err := os.Create(cfg.OutputDir + "/" + name)
+	f, err := os.Create(filepath.Join(cfg.OutputDir, name))
 	if err != nil {
 		return nil, fmt.Errorf("creating output file: %w", err)
 	}
 	return f, nil
+}
+
+func timeAgo(t time.Time) string {
+	d := time.Since(t)
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		return fmt.Sprintf("%dm ago", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(d.Hours()))
+	default:
+		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
+	}
 }
