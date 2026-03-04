@@ -4,6 +4,8 @@ A CLI tool that reports on merge requests created by a set of authors across one
 
 > **Note:** GitLab and GitHub are supported.
 
+<img width="1249" height="668" alt="image" src="https://github.com/user-attachments/assets/7ef3e671-a58c-4497-b437-0ae55cd73b7e" />
+
 ## Install
 
 Build and install the binary to `/usr/local/bin`:
