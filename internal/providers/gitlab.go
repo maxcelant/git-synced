@@ -99,13 +99,16 @@ func (gp *GitLabProvider) Expand(repos []string) ([]string, error) {
 	return expanded, nil
 }
 
-func (gp *GitLabProvider) Call(repo, author string, from time.Time) ([]Entry, error) {
+func (gp *GitLabProvider) Call(repo, author string, from, until time.Time) ([]Entry, error) {
 	encoded := strings.ReplaceAll(repo, "/", "%2F")
 	base := fmt.Sprintf("%s/api/v4/projects/%s/merge_requests", gp.cfg.BaseURL, encoded)
 
 	params := url.Values{}
 	params.Set("author_username", author)
 	params.Set("created_after", from.UTC().Format(time.RFC3339))
+	if !until.IsZero() {
+		params.Set("created_before", until.UTC().Format(time.RFC3339))
+	}
 	params.Set("state", gp.cfg.State)
 	params.Set("per_page", "100")
 

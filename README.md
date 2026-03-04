@@ -72,6 +72,9 @@ Flags override the values set in your config:
 | `--out` | Directory to write the report file |
 | `--lookback` | Hours to look back for MRs (overrides config) |
 | `--authors` | Comma-separated list of authors to filter by (overrides config) |
+| `--since` | Start date `YYYY-MM-DD` (overrides `--lookback`) |
+| `--until` | End date `YYYY-MM-DD` (default: no upper bound) |
+| `--state` | MR state: `opened`, `closed`, `merged`, or `all` (overrides config) |
 
 Examples:
 
@@ -82,6 +85,10 @@ gsync report --lookback 48
 gsync report --authors alice,bob
 gsync report --authors alice --authors bob
 gsync report --format text --out ~/reports
+gsync report --since 2024-01-01 --until 2024-01-31
+gsync report --since 2024-01-01
+gsync report --state merged
+gsync report --state all --since 2024-03-01
 ```
 
 The `--config` flag is global and can be passed before any subcommand:

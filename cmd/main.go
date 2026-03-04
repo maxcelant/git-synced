@@ -13,7 +13,7 @@ func defaultConfigPath() string {
 	if err != nil {
 		return "config.yaml"
 	}
-	return home + "/.git-synced/config.yaml"
+	return home + "/.gsync/config.yaml"
 }
 
 func main() {

@@ -16,7 +16,7 @@ type Entry interface {
 
 type Provider interface {
 	Expand(repos []string) ([]string, error)
-	Call(string, string, time.Time) ([]Entry, error)
+	Call(string, string, time.Time, time.Time) ([]Entry, error)
 }
 
 type ProviderFunc func(config.ProviderConfig) Provider

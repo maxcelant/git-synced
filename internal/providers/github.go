@@ -131,9 +131,15 @@ func githubStateQualifier(state string) string {
 	}
 }
 
-func (gp *GitHubProvider) Call(repo, author string, from time.Time) ([]Entry, error) {
-	q := fmt.Sprintf("type:pr author:%s repo:%s created:>%s",
-		author, repo, from.UTC().Format(time.RFC3339))
+func (gp *GitHubProvider) Call(repo, author string, from, until time.Time) ([]Entry, error) {
+	var q string
+	if !until.IsZero() {
+		q = fmt.Sprintf("type:pr author:%s repo:%s created:%s..%s",
+			author, repo, from.UTC().Format("2006-01-02"), until.UTC().Format("2006-01-02"))
+	} else {
+		q = fmt.Sprintf("type:pr author:%s repo:%s created:>%s",
+			author, repo, from.UTC().Format(time.RFC3339))
+	}
 	if sq := githubStateQualifier(gp.cfg.State); sq != "" {
 		q += " " + sq
 	}
